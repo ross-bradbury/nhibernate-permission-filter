@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+                   assembly="nHibernatePermissionFilter"
+                   namespace="nHibernatePermissionFilter.Domain">
+
+	<class name="Project">
+		<id name="Id">
+			<generator class="guid" />
+		</id>
+		<property name="Number" column="n" />
+		<property name="Dummy" />
+		<property name="AllowACLs" column="allow_acls" sql_type="" />
+
+		<!-- nHibernate doesn't understand the ?| operator; it thinks the ? is a parameter placeholder and there seems to be no way to escape it -->
+		<!--<filter name="aclFilter"
+		        condition="((acls -> 'isPublic') @> 'true') OR ((acls -> 'allowacls') ?| :groupIds)"/>-->
+
+		<!-- nHibernate doesn't understand the 'text[]' part; (project0_.is_public OR project0_.allow_acls && CAST(:p0 AS project0_.text[])) -->
+		<!--<filter name="aclFilter"
+		        condition="(is_public OR allow_acls &amp;&amp; CAST(:groupIds AS text[]))"/>-->
+
+		<filter name="aclFilter"
+		        condition="(is_public OR allow_acls &amp;&amp; :groupIds)"/>
+
+
+		<!--<filter name="aclFilter"
+		        condition="(id = :groupIds)"/>-->
+	</class>
+
+</hibernate-mapping>

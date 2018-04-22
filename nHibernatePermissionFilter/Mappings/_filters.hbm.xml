@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+                   assembly="nHibernatePermissionFilter"
+                   namespace="nHibernatePermissionFilter.Domain">
+
+	<filter-def name="aclFilter">
+		<!--<filter-param name="groupIds" type="ConsoleApplication.CustomNpgsql.PostgresSqlArrayType"/> -->
+		<filter-param name="groupIds" type="System.String[]"/>
+
+	</filter-def>
+
+</hibernate-mapping>
