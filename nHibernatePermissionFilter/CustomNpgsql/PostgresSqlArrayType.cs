@@ -1,4 +1,6 @@
-﻿using System;
+﻿// From https://github.com/daanl/Fluent-NHibernate--PostgreSQL-column-array/tree/master/ConsoleApplication
+// From http://daanleduc.nl/2014/02/08/fluent-nhibernate-postgresql-column-array/
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;

@@ -69,6 +69,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Filters\AclMakeTextArrayFilter.cs" />
+    <Compile Include="Filters\AclStringToArrayFilter.cs" />
+    <Compile Include="Filters\Disposable.cs" />
+    <Compile Include="Filters\AclNormalizedTableFilter.cs" />
     <Compile Include="CustomNpgsql\CustomPostgreSQL82Dialect.cs" />
     <Compile Include="CustomNpgsql\NpgsqlDriverExtended.cs" />
     <Compile Include="CustomNpgsql\NpgsqlExtendedSqlType.cs" />
@@ -77,13 +81,12 @@
     <Compile Include="Program.cs" />
     <Compile Include="Domain\Project.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Filters\PublicOrMatchesIdFilter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="NewFolder1\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

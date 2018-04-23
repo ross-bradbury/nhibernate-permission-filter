@@ -1,20 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using ConsoleApplication.CustomNpgsql;
+using System.Threading;
 using FluentNHibernate.Cfg;
 using nHibernatePermissionFilter.Domain;
-using nHibernatePermissionFilter.PonyApp.FluentFilters;
+using nHibernatePermissionFilter.Filters;
 using NHibernate;
-using NHibernate.Cfg;
-using NHibernate.Dialect;
-using NHibernate.Driver;
-using NHibernate.Engine;
-using NHibernate.Type;
 using Configuration = NHibernate.Cfg.Configuration;
 
 namespace nHibernatePermissionFilter
@@ -24,62 +17,62 @@ namespace nHibernatePermissionFilter
 		static void Main(string[] args)
 		{
 			//var sessionFactory = SessionFactory();
-			var sessionFactory = _sessionFactory.Value;
+			var sessionFactory = SessionFactory.Value;
 
 			using (var ses = sessionFactory.OpenSession())
 			{
-				var unfilteredCount = ses.Query<Project>().Take(100).ToList();
-				Console.WriteLine($"Unfiltered count {unfilteredCount.Count}");
-
-				//ses.EnableFilter("aclFilter").SetParameterList("groupIds", new[] { "256a2ceb-2b96-4034-a557-3e20697c7bed", "85f3f476-e98a-45f7-911a-3221a667c769" });
-				//ses.EnableFilter("aclFilter").SetParameter("groupIds", "'{\"256a2ceb-2b96-4034-a557-3e20697c7bed\",\"85f3f476-e98a-45f7-911a-3221a667c769\"}'");
-				//ses.EnableFilter("aclFilter").SetParameter("groupIds", new[] { "256a2ceb-2b96-4034-a557-3e20697c7bed", "85f3f476-e98a-45f7-911a-3221a667c769" });
 				ses.EnableFilter("publicOrMatchesId").SetParameter("justId", "c4d745c2-9150-4c47-9d9c-58773dde0441");
+				RunQuery(ses, "WARMUP");
+				ses.DisableFilter("publicOrMatchesId");
 
-				var filteredCount = ses.Query<Project>().Take(100).ToList().Count;
-				Console.WriteLine($"Filtered count {filteredCount}");
+				RunQuery(ses, "first 100 random");
+
+
+				var groupIds = new[] { "256a2ceb-2b96-4034-a557-3e20697c7bed", "85f3f476-e98a-45f7-911a-3221a667c769" };
+
+				using (AclNormalizedTableFilter.Enable(ses, groupIds))
+				{
+					RunQuery(ses, "Using normalized table (would be faster if not checking is_public so there would not be an OR)");
+				}
+
+				using (AclMakeTextArrayFilter.Enable(ses, groupIds))
+				{
+					RunQuery(ses, "Using array overlap with custom function make_text_array");
+				}
+
+				using (AclStringToArrayFilter.Enable(ses, groupIds))
+				{
+					RunQuery(ses, "Using array overlap with string_to_array");
+				}
 			}
 		}
 
-
-		private static ISessionFactory SessionFactory()
+		private static void RunQuery(ISession ses, string comment = "")
 		{
-			var Config = new Configuration();
-			Config.DataBaseIntegration(setings =>
+			for (int i = 1; i <= 3; i += 1)
 			{
-				setings.ConnectionStringName = "PostgresDbContext";
-				// becareful its ConnectionStringName I am giving , not the full ConnectionString
-				setings.Driver<NpgsqlDriver>();
-				setings.Dialect<PostgreSQL82Dialect>(); // mine is PostgreSQL 9.6.1/9.5.5
-#if DEBUG
-				setings.LogSqlInConsole = true;
-				setings.LogFormattedSql = true;
-#endif
-			});
-			Config.AddAssembly(Assembly.GetExecutingAssembly());
-
-
-			var sessionFactory = Config.BuildSessionFactory();
-			return sessionFactory;
+				Thread.Sleep(1000);
+				var watch = Stopwatch.StartNew();
+				var filteredCount = ses.Query<Project>().Take(100).ToList().Count;
+				watch.Stop();
+				Console.WriteLine($"Filtered count {filteredCount} in {watch.ElapsedMilliseconds} ms ({watch.ElapsedTicks} ticks) for execution {i}");
+				Console.WriteLine($"^^^^ {comment}\n");
+			}
+			Console.WriteLine();
 		}
 
-		private static Lazy<ISessionFactory> _sessionFactory = new Lazy<ISessionFactory>(() =>
+		private static readonly Lazy<ISessionFactory> SessionFactory = new Lazy<ISessionFactory>(() =>
 		{
-			var configuration = _configuration.Value;
+			var configuration = Configuration.Value;
 
 			var sessionFactory = Fluently.Configure(configuration)
-				//.Mappings(m => m.FluentMappings.Add(typeof(AclFilter)))
-				.Mappings(m =>
-					m.FluentMappings.AddFromAssembly(Assembly.GetExecutingAssembly()))
-				//.Mappings(m =>
-				//	m.HbmMappings
-				//		.AddFromAssemblyOf<Project>())
+				.Mappings(m => m.FluentMappings.AddFromAssembly(Assembly.GetExecutingAssembly()))
 				.BuildSessionFactory();
 
 			return sessionFactory;
 		});
 
-		private static Lazy<Configuration> _configuration = new Lazy<Configuration>(() =>
+		private static readonly Lazy<Configuration> Configuration = new Lazy<Configuration>(() =>
 		{
 			var configuration = new Configuration();
 
@@ -93,17 +86,6 @@ namespace nHibernatePermissionFilter
 			return configuration;
 		});
 
-	}
-
-	namespace PonyApp.FluentFilters
-	{
-		public class PublicOrMatchesIdFilter : FluentNHibernate.Mapping.FilterDefinition
-		{
-			public PublicOrMatchesIdFilter()
-			{
-				this.WithName("publicOrMatchesId").AddParameter("justId", NHibernate.NHibernateUtil.String);
-			}
-		}
 	}
 }
 
@@ -162,9 +144,13 @@ from generate_series(1,1000000) as X(n);
 create index on project (is_public);
 create index on project using GIN (allow_acls);
 
+	CREATE OR REPLACE FUNCTION public.make_text_array(text)
+ RETURNS text[]
+ LANGUAGE sql
+ IMMUTABLE STRICT
+AS $function$SELECT $1::text[]$function$;
 
-EXPLAIN (ANALYZE, COSTS, VERBOSE, BUFFERS) 
-select n, id, is_public from project where (is_public OR allow_acls && ARRAY['256a2ceb-2b96-4034-a557-3e20697c7bed','85f3f476-e98a-45f7-911a-3221a667c769']) AND n between 740500 and 741000;
+EXPLAIN (ANALYZE, COSTS, VERBOSE, BUFFERS) select n, id, is_public from project where (is_public OR allow_acls && ARRAY['256a2ceb-2b96-4034-a557-3e20697c7bed','85f3f476-e98a-45f7-911a-3221a667c769']) AND n between 740500 and 741000;
 
 
 */

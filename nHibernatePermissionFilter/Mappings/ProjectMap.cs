@@ -23,7 +23,13 @@ namespace nHibernatePermissionFilter.Mappings
 				.CustomType<PostgresSqlArrayType>()
 				.CustomSqlType("text[]");
 
-			//this.ApplyFilter("aclFilter", "(is_public OR allow_acls && :groupIds)");
+
+			this.ApplyFilter("aclNormalizedTableFilter", "(is_public OR Id in (SELECT pra.id FROM project_read_acls as pra WHERE pra.member_id IN ( :groupIds )))");
+
+			this.ApplyFilter("AclMakeTextArrayFilter", "(is_public OR allow_acls && (select make_text_array(:groupIds)))");
+
+			this.ApplyFilter("AclStringToArrayFilter", "(is_public OR allow_acls && (select string_to_array(:groupIds, ' ')))");
+
 			this.ApplyFilter("publicOrMatchesId", "(is_public OR :justId = Id)");
 		}
 	}
