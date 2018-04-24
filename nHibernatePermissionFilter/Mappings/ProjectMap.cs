@@ -8,7 +8,7 @@ namespace nHibernatePermissionFilter.Mappings
 	{
 		public ProjectMap()
 		{
-			this.Table("project");
+			this.Table("project_fornhpermfilt");
 
 			Id(x => x.Id);
 
@@ -24,7 +24,7 @@ namespace nHibernatePermissionFilter.Mappings
 				.CustomSqlType("text[]");
 
 
-			this.ApplyFilter("aclNormalizedTableFilter", "(is_public OR Id in (SELECT pra.id FROM project_read_acls as pra WHERE pra.member_id IN ( :groupIds )))");
+			this.ApplyFilter("aclNormalizedTableFilter", "(is_public OR Id in (SELECT pra.id FROM project_read_acls_fornhpermfilt as pra WHERE pra.member_id IN ( :groupIds )))");
 
 			this.ApplyFilter("AclMakeTextArrayFilter", "(is_public OR allow_acls && (select make_text_array(:groupIds)))");
 
