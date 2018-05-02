@@ -60,7 +60,7 @@ namespace nHibernatePermissionFilter
 				{
 					var count = Convert.ToInt64(command.ExecuteScalar());
 
-					if (count >= 5000000)
+					if (count >= 1)
 						return;
 				}
 				catch (DbException)
@@ -120,8 +120,6 @@ from generate_series({start},{end}) as X(n);";
 					@"select id, unnest(allow_acls) as member_id into project_read_acls_fornhpermfilt from project_fornhpermfilt;",
 
 					@"alter table project_read_acls_fornhpermfilt add primary key (member_id, id);",
-
-					@"VACUUM ANALYZE;"
 				};
 
 				foreach (var cmdText in postCommands)
@@ -132,6 +130,14 @@ from generate_series({start},{end}) as X(n);";
 				}
 
 				tx.Commit();
+			}
+
+			using (var command = connection.CreateCommand())
+			{
+				command.CommandTimeout = 10000;
+				command.CommandText = "VACUUM ANALYZE;";
+				Console.WriteLine(command.CommandText);
+				command.ExecuteNonQuery();
 			}
 		}
 
