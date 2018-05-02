@@ -20,7 +20,7 @@ namespace nHibernatePermissionFilter.Mappings
 
 			Map(x => x.AllowACLs)
 				.Column("allow_acls")
-				.CustomType<PostgresSqlTextArrayType>()
+				.CustomType<PostgresSqlTextSetType>()
 				.CustomSqlType("text[]");
 
 

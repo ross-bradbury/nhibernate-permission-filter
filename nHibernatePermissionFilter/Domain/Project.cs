@@ -8,6 +8,6 @@ namespace nHibernatePermissionFilter.Domain
 		public virtual int Number { get; set; }
 		public virtual string Dummy { get; set; }
 		public virtual bool IsPublic { get; set; }
-		public virtual List<string> AllowACLs { get; set; }
+		public virtual ISet<string> AllowACLs { get; set; }
 	}
 }

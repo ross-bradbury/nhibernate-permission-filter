@@ -69,6 +69,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CustomNpgsql\PostgresSqlArrayType.cs" />
+    <Compile Include="CustomNpgsql\PostgresSqlTextSetType.cs" />
     <Compile Include="Filters\AclMakeTextArrayFilter.cs" />
     <Compile Include="Filters\AclStringToArrayFilter.cs" />
     <Compile Include="Filters\Disposable.cs" />

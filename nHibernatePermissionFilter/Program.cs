@@ -24,6 +24,10 @@ namespace nHibernatePermissionFilter
 			{
 				PrepareSchemaAndData(ses.Connection);
 
+				//var test = ses.Query<Project>().Take(1).Single();
+				//test.AllowACLs.Add(Guid.Empty.ToString());
+				//ses.Flush();
+
 				ses.EnableFilter("publicOrMatchesId").SetParameter("justId", "c4d745c2-9150-4c47-9d9c-58773dde0441");
 				RunQuery(ses, "WARMUP");
 				ses.DisableFilter("publicOrMatchesId");
@@ -147,7 +151,8 @@ from generate_series({start},{end}) as X(n);";
 			{
 				Thread.Sleep(1000);
 				var watch = Stopwatch.StartNew();
-				var filteredCount = ses.Query<Project>().Take(100).ToList().Count;
+				var filtered = ses.Query<Project>().Take(100).ToList();
+				var filteredCount = filtered.Count;
 				watch.Stop();
 				Console.WriteLine($"Filtered count {filteredCount} in {watch.ElapsedMilliseconds} ms ({watch.ElapsedTicks} ticks) for execution {i}");
 				Console.WriteLine($"^^^^ {comment}\n");
