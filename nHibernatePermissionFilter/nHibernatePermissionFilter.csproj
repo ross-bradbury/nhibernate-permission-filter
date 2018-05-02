@@ -73,10 +73,9 @@
     <Compile Include="Filters\AclStringToArrayFilter.cs" />
     <Compile Include="Filters\Disposable.cs" />
     <Compile Include="Filters\AclNormalizedTableFilter.cs" />
-    <Compile Include="CustomNpgsql\CustomPostgreSQL82Dialect.cs" />
     <Compile Include="CustomNpgsql\NpgsqlDriverExtended.cs" />
     <Compile Include="CustomNpgsql\NpgsqlExtendedSqlType.cs" />
-    <Compile Include="CustomNpgsql\PostgresSqlArrayType.cs" />
+    <Compile Include="CustomNpgsql\PostgresSqlTextArrayType.cs" />
     <Compile Include="Mappings\ProjectMap.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Domain\Project.cs" />

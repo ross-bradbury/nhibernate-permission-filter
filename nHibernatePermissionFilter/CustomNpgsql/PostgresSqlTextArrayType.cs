@@ -11,7 +11,10 @@ using NHibernate.UserTypes;
 
 namespace ConsoleApplication.CustomNpgsql
 {
-    public class PostgresSqlArrayType : IUserType
+	/// <summary>
+	/// Handles Postgres text[] columns mapped to <see cref="IList{String}">IList&lt;String&gt;</see>
+	/// </summary>
+	public class PostgresSqlTextArrayType : IUserType
     {
         bool IUserType.Equals(object x, object y)
         {
